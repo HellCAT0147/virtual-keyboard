@@ -52,6 +52,9 @@ function createButtons(row, ...buttons) {
           btn = new Button('backspace');
           buttonHTML.classList.add('row__button_width_wide');
           break;
+        case 'Del':
+          btn = new Button('delete');
+          break;
         default:
           btn = new Button('win');
           span.classList.add('row__title_type_win');
@@ -191,11 +194,16 @@ function createKeyboard() {
 
 createKeyboard();
 
+// Getting all buttons by groups in order to manipulate them comfortably
 const ALL_BUTTONS = document.querySelectorAll('.row__button');
 const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
 const LETTERS = document.querySelectorAll('.row__title_type_letter');
 const PRESSED_BUTTONS = [];
 const SCREEN = document.querySelector('textarea');
+const BACKSPACE_BUTTON = document.querySelector('.row__button_width_wide');
+const CAPS_LOCK_BUTTON = document.querySelector('.row__button_width_medium');
+const SPACE_BUTTON = document.querySelector('.row__button_width_largest');
+
 let cursor = 0;
 let shiftTrigger = false;
 let capsTrigger = false;
@@ -234,15 +242,33 @@ function unshift(side) {
   shiftTrigger = false;
 }
 
+function switchCapsLock() {
+  capsTrigger = !capsTrigger;
+  if (capsTrigger) CAPS_LOCK_BUTTON.classList.add('row__button_active');
+  else CAPS_LOCK_BUTTON.classList.remove('row__button_active');
+}
+
 function typeToCursorPlace(letter, shif = false, cap = false) {
-  let isBig = false;
-  if (shif) isBig = !isBig;
-  if (cap) isBig = !isBig;
-  const resultLetter = (isBig) ? letter.toUpperCase() : letter.toLowerCase();
-  const leftText = SCREEN.value.slice(0, cursor);
-  const rightText = SCREEN.value.slice(cursor);
-  SCREEN.value = leftText + resultLetter + rightText;
-  cursor += 1;
+  let resultLetter;
+  let leftText;
+  if (letter === 'backspace') {
+    if (cursor > 0) {
+      leftText = SCREEN.value.slice(0, cursor - 1);
+      resultLetter = '';
+      const rightText = SCREEN.value.slice(cursor);
+      SCREEN.value = leftText + resultLetter + rightText;
+      cursor -= 1;
+    }
+  } else {
+    let isBig = false;
+    if (shif) isBig = !isBig;
+    if (cap) isBig = !isBig;
+    resultLetter = (isBig) ? letter.toUpperCase() : letter.toLowerCase();
+    leftText = SCREEN.value.slice(0, cursor);
+    const rightText = SCREEN.value.slice(cursor);
+    SCREEN.value = leftText + resultLetter + rightText;
+    cursor += 1;
+  }
   SCREEN.selectionStart = cursor;
   SCREEN.selectionEnd = cursor;
 }
@@ -265,9 +291,15 @@ document.addEventListener('keydown', (event) => {
     });
     typeToCursorPlace(event.code[3], shiftTrigger, capsTrigger);
   } else if (event.key === 'CapsLock') {
-    capsTrigger = !capsTrigger;
-    if (capsTrigger) document.querySelector('.row__button_width_medium').classList.add('row__button_active');
-    else document.querySelector('.row__button_width_medium').classList.remove('row__button_active');
+    switchCapsLock();
+  } else if (event.key === 'Backspace') {
+    event.preventDefault();
+    typeToCursorPlace('backspace');
+    BACKSPACE_BUTTON.classList.add('row__button_active');
+  } else if (event.code === 'Space') {
+    event.preventDefault();
+    typeToCursorPlace(' ');
+    SPACE_BUTTON.classList.add('row__button_active');
   }
 });
 
@@ -284,13 +316,25 @@ document.addEventListener('keyup', (event) => {
     LETTERS.forEach((letterBtn) => {
       if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.remove('row__button_active');
     });
+  } else if (event.key === 'Backspace') {
+    BACKSPACE_BUTTON.classList.remove('row__button_active');
+  } else if (event.code === 'Space') {
+    SPACE_BUTTON.classList.remove('row__button_active');
   }
 });
 
 SHIFT_BUTTONS.forEach((button) => button.addEventListener('mousedown', shift));
+
 document.addEventListener('mouseup', (event) => {
   if (!event.shiftKey) unshift();
 });
+
 LETTERS.forEach((letter) => letter.parentNode.addEventListener('mousedown', () => {
   typeToCursorPlace(letter.innerHTML, shiftTrigger, capsTrigger);
 }));
+
+BACKSPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('backspace'));
+
+CAPS_LOCK_BUTTON.addEventListener('mousedown', switchCapsLock);
+
+SPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace(' '));
