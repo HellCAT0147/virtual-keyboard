@@ -23,9 +23,6 @@ function createButtons(row, ...buttons) {
       btn = new Button('number');
       btn.subLabel = button.shiftLabel;
       span2.classList.add('row__title', 'row__title_shifted');
-      if (btn.subLabel === '|') {
-        buttonHTML.classList.add('row__button_width_medium');
-      }
     } else if (button.label.length > 1) {
       switch (button.label) {
         case 'Tab':
@@ -128,6 +125,7 @@ function createKeyboard() {
     { label: '[', shiftLabel: '{' },
     { label: ']', shiftLabel: '}' },
     { label: '\\', shiftLabel: '|' },
+    { label: 'Del' },
   );
 
   rows[2] = createButtons(
@@ -198,7 +196,9 @@ const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
 const LETTERS = document.querySelectorAll('.row__title_type_letter');
 const PRESSED_BUTTONS = [];
 const SCREEN = document.querySelector('textarea');
-let cursor;
+let cursor = 0;
+let shiftTrigger = false;
+let capsTrigger = false;
 
 function removeFromArray(array, trash) {
   const id = array.indexOf(trash);
@@ -220,6 +220,7 @@ function shift(side) {
   } else if (side === 'ShiftRight') {
     SHIFT_BUTTONS[1].classList.add('row__button_active');
   }
+  shiftTrigger = true;
 }
 
 function unshift(side) {
@@ -230,6 +231,20 @@ function unshift(side) {
   } else if (side === 'ShiftRight') {
     SHIFT_BUTTONS[1].classList.remove('row__button_active');
   }
+  shiftTrigger = false;
+}
+
+function typeToCursorPlace(letter, shif = false, cap = false) {
+  let isBig = false;
+  if (shif) isBig = !isBig;
+  if (cap) isBig = !isBig;
+  const resultLetter = (isBig) ? letter.toUpperCase() : letter.toLowerCase();
+  const leftText = SCREEN.value.slice(0, cursor);
+  const rightText = SCREEN.value.slice(cursor);
+  SCREEN.value = leftText + resultLetter + rightText;
+  cursor += 1;
+  SCREEN.selectionStart = cursor;
+  SCREEN.selectionEnd = cursor;
 }
 
 document.addEventListener('keydown', (event) => {
@@ -248,12 +263,11 @@ document.addEventListener('keydown', (event) => {
     LETTERS.forEach((letterBtn) => {
       if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.add('row__button_active');
     });
-    cursor = SCREEN.selectionStart;
-    const leftText = SCREEN.value.slice(0, cursor);
-    const rightText = SCREEN.value.slice(cursor);
-    SCREEN.value = leftText + event.key + rightText;
-    SCREEN.selectionStart = cursor + 1;
-    SCREEN.selectionEnd = cursor + 1;
+    typeToCursorPlace(event.code[3], shiftTrigger, capsTrigger);
+  } else if (event.key === 'CapsLock') {
+    capsTrigger = !capsTrigger;
+    if (capsTrigger) document.querySelector('.row__button_width_medium').classList.add('row__button_active');
+    else document.querySelector('.row__button_width_medium').classList.remove('row__button_active');
   }
 });
 
@@ -274,4 +288,9 @@ document.addEventListener('keyup', (event) => {
 });
 
 SHIFT_BUTTONS.forEach((button) => button.addEventListener('mousedown', shift));
-SHIFT_BUTTONS.forEach((button) => button.addEventListener('mouseup', unshift));
+document.addEventListener('mouseup', (event) => {
+  if (!event.shiftKey) unshift();
+});
+LETTERS.forEach((letter) => letter.parentNode.addEventListener('mousedown', () => {
+  typeToCursorPlace(letter.innerHTML, shiftTrigger, capsTrigger);
+}));

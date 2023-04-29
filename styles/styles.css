@@ -127,7 +127,7 @@
 }
 
 .row__button_width_wide {
-  min-width: 125px;
+  min-width: 120px;
 }
 
 .row__button_width_thick {
@@ -135,11 +135,11 @@
 }
 
 .row__button_width_medium {
-  min-width: 100px;
+  min-width: 105px;
 }
 
 .row__button_width_thin {
-  min-width: 75px;
+  min-width: 65px;
 }
 
 .row__button_width_slim {
