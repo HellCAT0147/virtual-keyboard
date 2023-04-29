@@ -86,7 +86,7 @@ function createKeyboard() {
   const html = document.querySelector('html');
   const body = document.querySelector('body');
   const main = document.createElement('main');
-  const input = document.createElement('input');
+  const display = document.createElement('textarea');
   const keyboard = document.createElement('div');
   const rows = [];
 
@@ -180,13 +180,13 @@ function createKeyboard() {
   html.classList.add('page');
   body.classList.add('body');
   main.classList.add('all');
-  input.classList.add('all__display');
-  input.setAttribute('type', 'text');
+  display.classList.add('all__display');
+  display.setAttribute('type', 'text');
   keyboard.classList.add('keyboard', 'all__keyboard');
   rows.forEach((row) => row.classList.add('row', 'keyboard__row'));
 
   rows.forEach((row) => keyboard.appendChild(row));
-  main.appendChild(input);
+  main.appendChild(display);
   main.appendChild(keyboard);
   body.appendChild(main);
 }
@@ -195,8 +195,10 @@ createKeyboard();
 
 const ALL_BUTTONS = document.querySelectorAll('.row__button');
 const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
+const LETTERS = document.querySelectorAll('.row__title_type_letter');
 const PRESSED_BUTTONS = [];
-const SCREEN = document.querySelector('input');
+const SCREEN = document.querySelector('textarea');
+let cursor;
 
 function removeFromArray(array, trash) {
   const id = array.indexOf(trash);
@@ -242,14 +244,32 @@ document.addEventListener('keydown', (event) => {
     }
     shift(event.code);
   } else if (event.code.includes('Key')) {
-    SCREEN.value += event.key;
+    event.preventDefault();
+    LETTERS.forEach((letterBtn) => {
+      if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.add('row__button_active');
+    });
+    cursor = SCREEN.selectionStart;
+    const leftText = SCREEN.value.slice(0, cursor);
+    const rightText = SCREEN.value.slice(cursor);
+    SCREEN.value = leftText + event.key + rightText;
+    SCREEN.selectionStart = cursor + 1;
+    SCREEN.selectionEnd = cursor + 1;
   }
 });
+
+SCREEN.addEventListener('mouseup', () => {
+  cursor = SCREEN.selectionStart;
+});
+
 document.addEventListener('keyup', (event) => {
   if (event.key === 'Shift') {
     removeFromArray(PRESSED_BUTTONS, event.code);
     unshift('ShiftRight');
     unshift('ShiftLeft');
+  } else if (event.code.includes('Key')) {
+    LETTERS.forEach((letterBtn) => {
+      if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.remove('row__button_active');
+    });
   }
 });
 
