@@ -256,6 +256,8 @@ let capslockLock = false; // lock CapsLock button when it is pressed
 let timeAltCtrl; // for setting and then checking time between behaviours
 let enLanguage = true;
 
+SCREEN.setAttribute('style', 'min-height: 0;');
+
 function changeLanguage(language) {
   if (language) {
     for (let i = 0; i < LETTERS.length; i += 1) {
