@@ -608,6 +608,11 @@ document.addEventListener('keydown', (event) => {
     ARROW_BUTTONS[3].classList.add('row__button_type_arrow_active');
     typeToCursorPlace('→');
   }
+  if (SCREEN.value.length) {
+    SCREEN.setAttribute('style', 'min-height: 150px;');
+  } else {
+    SCREEN.setAttribute('style', 'min-height: 0;');
+  }
 });
 
 // Keyboard events when button is released
