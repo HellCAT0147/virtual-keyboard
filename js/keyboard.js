@@ -211,6 +211,7 @@ const CAPS_LOCK_BUTTON = document.querySelector('.row__button_width_medium');
 const SPACE_BUTTON = document.querySelector('.row__button_width_largest');
 const CTRL_BUTTONS = document.querySelectorAll('.row__button_width_slim');
 const TAB_BUTTON = document.querySelector('.row__button_width_thin');
+const ENTER_BUTTON = document.querySelectorAll('.row__button_width_wide')[1];
 
 let cursor = 0;
 let shiftTrigger = false;
@@ -286,6 +287,7 @@ function typeToCursorPlace(letter, shif = false, cap = false) {
   SCREEN.selectionEnd = cursor;
 }
 
+// Keyboard events when button is hold
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Shift') {
     if (!PRESSED_BUTTONS.includes(event.code)) PRESSED_BUTTONS.push(event.code);
@@ -389,13 +391,32 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     typeToCursorPlace('    ');
     TAB_BUTTON.classList.add('row__button_active');
+  } else if (event.code === 'Enter') {
+    event.preventDefault();
+    typeToCursorPlace('\n');
+    ENTER_BUTTON.classList.add('row__button_active');
+  } else if (event.code === 'Semicolon') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === ':') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
+  } else if (event.code === 'Quote') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '"') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
   }
 });
 
-SCREEN.addEventListener('mouseup', () => {
-  cursor = SCREEN.selectionStart;
-});
-
+// Keyboard events when button is released
 document.addEventListener('keyup', (event) => {
   if (event.key === 'Shift') {
     removeFromArray(PRESSED_BUTTONS, event.code);
@@ -446,7 +467,22 @@ document.addEventListener('keyup', (event) => {
     });
   } else if (event.code === 'Tab') {
     TAB_BUTTON.classList.remove('row__button_active');
+  } else if (event.code === 'Enter') {
+    ENTER_BUTTON.classList.remove('row__button_active');
+  } else if (event.code === 'Semicolon') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === ':') title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'Quote') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '"') title.parentNode.classList.remove('row__button_active');
+    });
   }
+});
+
+// MouseEvents with virtual keyboard
+SCREEN.addEventListener('mouseup', () => {
+  cursor = SCREEN.selectionStart;
 });
 
 SHIFT_BUTTONS.forEach((button) => button.addEventListener('mousedown', shift));
@@ -490,3 +526,7 @@ CAPS_LOCK_BUTTON.addEventListener('mousedown', () => {
 });
 
 SPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace(' '));
+
+TAB_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('    '));
+
+ENTER_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('\n'));
