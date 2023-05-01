@@ -89,6 +89,7 @@ function createKeyboard() {
   const display = document.createElement('textarea');
   const keyboard = document.createElement('div');
   const rows = [];
+  const system = document.createElement('div');
 
   for (let i = 0; i < 5; i += 1) {
     rows.push(document.createElement('div'));
@@ -178,6 +179,8 @@ function createKeyboard() {
     { label: 'Ctrl' },
   );
 
+  system.textContent = 'This virtual keyboard was created in Windows 11';
+
   html.classList.add('page');
   body.classList.add('body');
   main.classList.add('all');
@@ -185,10 +188,10 @@ function createKeyboard() {
   display.setAttribute('type', 'text');
   keyboard.classList.add('keyboard', 'all__keyboard');
   rows.forEach((row) => row.classList.add('row', 'keyboard__row'));
+  system.classList.add('all__instructions');
 
   rows.forEach((row) => keyboard.appendChild(row));
-  main.appendChild(display);
-  main.appendChild(keyboard);
+  [display, keyboard, system].forEach((div) => main.appendChild(div));
   body.appendChild(main);
 }
 
@@ -198,11 +201,13 @@ createKeyboard();
 const ALL_BUTTONS = document.querySelectorAll('.row__button');
 const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
 const LETTERS = document.querySelectorAll('.row__title_type_letter');
+const SHIFTED_SECONDS = document.querySelectorAll('.row__title_shifted'); // labels of special characters like #, $, %, etc.
 const PRESSED_BUTTONS = [];
 const SCREEN = document.querySelector('textarea');
 const BACKSPACE_BUTTON = document.querySelector('.row__button_width_wide');
 const CAPS_LOCK_BUTTON = document.querySelector('.row__button_width_medium');
 const SPACE_BUTTON = document.querySelector('.row__button_width_largest');
+const CTRL_BUTTONS = document.querySelectorAll('.row__button_width_slim');
 
 let cursor = 0;
 let shiftTrigger = false;
@@ -300,6 +305,53 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     typeToCursorPlace(' ');
     SPACE_BUTTON.classList.add('row__button_active');
+  } else if (event.code === 'ControlLeft') {
+    CTRL_BUTTONS[0].classList.add('row__button_active');
+  } else if (event.code === 'ControlRight') {
+    CTRL_BUTTONS[1].classList.add('row__button_active');
+  } else if (event.code.includes('Digit')) {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.previousSibling.innerHTML === event.code[5]) {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) {
+          if (event.code[5] === '7') typeToCursorPlace('&');
+          else typeToCursorPlace(title.innerHTML);
+        } else typeToCursorPlace(event.code[5]);
+      }
+    });
+  } else if (event.code === 'Backquote') {
+    event.preventDefault();
+    SHIFTED_SECONDS[0].parentNode.classList.add('row__button_active');
+    if (shiftTrigger) typeToCursorPlace(SHIFTED_SECONDS[0].innerHTML);
+    else typeToCursorPlace(SHIFTED_SECONDS[0].previousSibling.innerHTML);
+  } else if (event.code === 'Minus') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '_') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
+  } else if (event.code === 'Equal') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '+') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
+  } else if (event.code === 'BracketLeft') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '{') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
   }
 });
 
@@ -320,6 +372,28 @@ document.addEventListener('keyup', (event) => {
     BACKSPACE_BUTTON.classList.remove('row__button_active');
   } else if (event.code === 'Space') {
     SPACE_BUTTON.classList.remove('row__button_active');
+  } else if (event.code === 'ControlLeft') {
+    CTRL_BUTTONS[0].classList.remove('row__button_active');
+  } else if (event.code === 'ControlRight') {
+    CTRL_BUTTONS[1].classList.remove('row__button_active');
+  } else if (event.code.includes('Digit')) {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.previousSibling.innerHTML === event.code[5]) title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'Backquote') {
+    SHIFTED_SECONDS[0].parentNode.classList.remove('row__button_active');
+  } else if (event.code === 'Minus') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '_') title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'Equal') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '+') title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'BracketLeft') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '{') title.parentNode.classList.remove('row__button_active');
+    });
   }
 });
 
@@ -331,6 +405,24 @@ document.addEventListener('mouseup', (event) => {
 
 LETTERS.forEach((letter) => letter.parentNode.addEventListener('mousedown', () => {
   typeToCursorPlace(letter.innerHTML, shiftTrigger, capsTrigger);
+}));
+
+SHIFTED_SECONDS.forEach((title) => title.parentNode.addEventListener('mousedown', () => {
+  if (shiftTrigger) {
+    switch (title.innerHTML) {
+      case '&amp;':
+        typeToCursorPlace('&');
+        break;
+      case '&lt;':
+        typeToCursorPlace('<');
+        break;
+      case '&gt;':
+        typeToCursorPlace('>');
+        break;
+      default:
+        typeToCursorPlace(title.innerHTML);
+    }
+  } else typeToCursorPlace(title.previousSibling.innerHTML);
 }));
 
 BACKSPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('backspace'));

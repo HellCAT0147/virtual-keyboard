@@ -40,6 +40,12 @@
   color: #d8ffce;
 }
 
+.all__instructions {
+  font-family: "Turret Road", sans-serif;
+  font-size: 20px;
+  color: #d8ffce;
+}
+
 .keyboard {
   display: -webkit-box;
   display: -ms-flexbox;
