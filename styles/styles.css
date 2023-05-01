@@ -35,7 +35,7 @@
   background: transparent;
   outline: none;
   border: none;
-  font-family: "Turret Road", sans-serif;
+  font-family: "Turret Road", monospace, sans-serif;
   font-size: 20px;
   color: #d8ffce;
 }
@@ -44,6 +44,7 @@
   font-family: "Turret Road", sans-serif;
   font-size: 20px;
   color: #d8ffce;
+  text-align: center;
 }
 
 .keyboard {
@@ -84,7 +85,7 @@
   min-height: 50px;
   background: transparent;
   color: #d8ffce;
-  font-family: "Turret Road", sans-serif;
+  font-family: "Turret Road", monospace, sans-serif;
   font-size: 17px;
   border-radius: 10px;
   border: 2px solid #d8ffce;

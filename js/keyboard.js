@@ -89,7 +89,9 @@ function createKeyboard() {
   const display = document.createElement('textarea');
   const keyboard = document.createElement('div');
   const rows = [];
-  const system = document.createElement('div');
+  const instructions = document.createElement('div');
+  const system = document.createElement('p');
+  const language = document.createElement('p');
 
   for (let i = 0; i < 5; i += 1) {
     rows.push(document.createElement('div'));
@@ -179,7 +181,8 @@ function createKeyboard() {
     { label: 'Ctrl' },
   );
 
-  system.textContent = 'This virtual keyboard was created in Windows 11';
+  system.textContent = 'This virtual keyboard was created in Windows 11.';
+  language.textContent = 'To switch language on left side of physical keyboard press Alt + Shift or Shift + Alt.';
 
   html.classList.add('page');
   body.classList.add('body');
@@ -188,10 +191,11 @@ function createKeyboard() {
   display.setAttribute('type', 'text');
   keyboard.classList.add('keyboard', 'all__keyboard');
   rows.forEach((row) => row.classList.add('row', 'keyboard__row'));
-  system.classList.add('all__instructions');
+  instructions.classList.add('all__instructions');
 
   rows.forEach((row) => keyboard.appendChild(row));
-  [display, keyboard, system].forEach((div) => main.appendChild(div));
+  [system, language].forEach((p) => instructions.appendChild(p));
+  [display, keyboard, instructions].forEach((div) => main.appendChild(div));
   body.appendChild(main);
 }
 
@@ -203,7 +207,7 @@ const ALL_LABELS = document.querySelectorAll('.row__title');
 const DELETE = Array.from(ALL_LABELS).find((label) => label.innerHTML === 'Del');
 const ALTS = Array.from(ALL_LABELS).filter((label) => label.innerHTML === 'Alt');
 const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
-const LETTERS = document.querySelectorAll('.row__title_type_letter');
+
 const SHIFTED_SECONDS = document.querySelectorAll('.row__title_shifted'); // labels of special characters like #, $, %, etc.
 const PRESSED_BUTTONS = [];
 const SCREEN = document.querySelector('textarea');
@@ -213,12 +217,43 @@ const SPACE_BUTTON = document.querySelector('.row__button_width_largest');
 const CTRL_BUTTONS = document.querySelectorAll('.row__button_width_slim');
 const TAB_BUTTON = document.querySelector('.row__button_width_thin');
 const ENTER_BUTTON = document.querySelectorAll('.row__button_width_wide')[1];
+const WINKEY = document.querySelector('.row__title_type_win');
+const LETTERS = document.querySelectorAll('.row__title_type_letter');
+const LETTER_BINDINGS = {
+  Q: 'Й',
+  W: 'Ц',
+  E: 'У',
+  R: 'К',
+  T: 'Е',
+  Y: 'Н',
+  U: 'Г',
+  I: 'Ш',
+  O: 'Щ',
+  P: 'З',
+  A: 'Ф',
+  S: 'Ы',
+  D: 'В',
+  F: 'А',
+  G: 'П',
+  H: 'Р',
+  J: 'О',
+  K: 'Л',
+  L: 'Д',
+  Z: 'Я',
+  X: 'Ч',
+  C: 'С',
+  V: 'М',
+  B: 'И',
+  N: 'Т',
+  M: 'Ь',
+};
 
 let cursor = 0;
 let shiftTrigger = false;
 let capsTrigger = false;
 let capslockLock = false; // lock CapsLock button when it is pressed
 let timeAltCtrl; // for setting and then checking time between behaviours
+let enLanguage = true;
 
 function removeFromArray(array, trash) {
   const id = array.indexOf(trash);
@@ -289,9 +324,64 @@ function typeToCursorPlace(letter, shif = false, cap = false) {
   SCREEN.selectionEnd = cursor;
 }
 
+function changeLanguage(language) {
+  if (language) {
+    for (let i = 0; i < LETTERS.length; i += 1) {
+      LETTERS[i].innerHTML = Object.values(LETTER_BINDINGS)[i];
+    }
+    const specialCharacters = ['Ё', '!', '"', '№', ';', '%', ':', '?', '*', '(', ')', '_', '+', 'Х', 'Ъ', '/', 'Ж', 'Э', 'Б', 'Ю', ',', '.'];
+    for (let i = 0; i < SHIFTED_SECONDS.length; i += 1) {
+      if (specialCharacters[i].match(/[а-я]/i) || specialCharacters[i] === 'Ё') {
+        SHIFTED_SECONDS[i].previousSibling.innerHTML = specialCharacters[i];
+        SHIFTED_SECONDS[i].innerHTML = '';
+        SHIFTED_SECONDS[i].classList.remove('row__title_shifted');
+        SHIFTED_SECONDS[i].previousSibling.classList.add('row__title_type_letter');
+      } else {
+        SHIFTED_SECONDS[i].innerHTML = specialCharacters[i];
+        if (i === SHIFTED_SECONDS.length - 1) {
+          SHIFTED_SECONDS[i].previousSibling.innerHTML = specialCharacters[i + 1];
+        }
+      }
+    }
+  } else {
+    for (let i = 0; i < LETTERS.length; i += 1) {
+      LETTERS[i].innerHTML = Object.keys(LETTER_BINDINGS)[i];
+    }
+    const specialCharacters = ['~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '{', '}', '|', ':', '"', '<', '>', '?', '/', '.', ',', '\'', ';', ']', '[', '`'];
+    for (let i = 0; i < specialCharacters.length; i += 1) {
+      SHIFTED_SECONDS[i].innerHTML = specialCharacters[i];
+      switch (i) {
+        case 0:
+        case 13:
+        case 14:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+          SHIFTED_SECONDS[i].classList.add('row__title_shifted');
+          SHIFTED_SECONDS[i].previousSibling.classList.remove('row__title_type_letter');
+          SHIFTED_SECONDS[i].previousSibling.innerHTML = specialCharacters.pop([i]);
+          break;
+        default:
+      }
+    }
+  }
+  enLanguage = !enLanguage;
+}
+
 // Keyboard events when button is hold
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Shift') {
+  if (event.code === 'ControlLeft') {
+    setTimeout(() => {
+      if (Math.ceil(timeAltCtrl) > 1) CTRL_BUTTONS[0].classList.add('row__button_active');
+    }, 5);
+    timeAltCtrl = event.timeStamp;
+  } else if (event.code === 'AltRight') {
+    timeAltCtrl -= event.timeStamp;
+    event.preventDefault();
+    ALTS[1].parentNode.classList.add('row__button_active');
+  } else if (event.key === 'Shift') {
     if (!PRESSED_BUTTONS.includes(event.code)) PRESSED_BUTTONS.push(event.code);
     else if (event.code === 'ShiftRight' && PRESSED_BUTTONS.includes('ShiftLeft')) {
       unshift('ShiftLeft');
@@ -303,10 +393,17 @@ document.addEventListener('keydown', (event) => {
     shift(event.code);
   } else if (event.code.includes('Key')) {
     event.preventDefault();
-    LETTERS.forEach((letterBtn) => {
-      if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.add('row__button_active');
-    });
-    typeToCursorPlace(event.code[3], shiftTrigger, capsTrigger);
+    if (enLanguage) {
+      LETTERS.forEach((letterBtn) => {
+        if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.add('row__button_active');
+      });
+      typeToCursorPlace(event.code[3], shiftTrigger, capsTrigger);
+    } else {
+      LETTERS.forEach((letterBtn) => {
+        if (letterBtn.innerHTML === LETTER_BINDINGS[event.code[3]]) letterBtn.parentNode.classList.add('row__button_active');
+      });
+      typeToCursorPlace(LETTER_BINDINGS[event.code[3]], shiftTrigger, capsTrigger);
+    }
   } else if (event.key === 'CapsLock') {
     CAPS_LOCK_BUTTON.classList.add('row__button_active');
     switchCapsLock();
@@ -324,27 +421,18 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     typeToCursorPlace(' ');
     SPACE_BUTTON.classList.add('row__button_active');
-  } else if (event.code === 'ControlLeft') {
-    setTimeout(() => {
-      if (Math.ceil(timeAltCtrl) > 1) CTRL_BUTTONS[0].classList.add('row__button_active');
-    }, 5);
-    timeAltCtrl = event.timeStamp;
   } else if (event.code === 'ControlRight') {
     CTRL_BUTTONS[1].classList.add('row__button_active');
   } else if (event.code === 'AltLeft') {
     event.preventDefault();
     ALTS[0].parentNode.classList.add('row__button_active');
-  } else if (event.code === 'AltRight') {
-    timeAltCtrl -= event.timeStamp;
-    event.preventDefault();
-    ALTS[1].parentNode.classList.add('row__button_active');
   } else if (event.code.includes('Digit')) {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
       if (title.previousSibling.innerHTML === event.code[5]) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) {
-          if (event.code[5] === '7') typeToCursorPlace('&');
+          if (event.code[5] === '7' && enLanguage) typeToCursorPlace('&');
           else typeToCursorPlace(title.innerHTML);
         } else typeToCursorPlace(event.code[5]);
       }
@@ -352,8 +440,12 @@ document.addEventListener('keydown', (event) => {
   } else if (event.code === 'Backquote') {
     event.preventDefault();
     SHIFTED_SECONDS[0].parentNode.classList.add('row__button_active');
-    if (shiftTrigger) typeToCursorPlace(SHIFTED_SECONDS[0].innerHTML);
-    else typeToCursorPlace(SHIFTED_SECONDS[0].previousSibling.innerHTML);
+    if (shiftTrigger && enLanguage) typeToCursorPlace(SHIFTED_SECONDS[0].innerHTML);
+    else if (!shiftTrigger && enLanguage) {
+      typeToCursorPlace(SHIFTED_SECONDS[0].previousSibling.innerHTML);
+    } else {
+      typeToCursorPlace(SHIFTED_SECONDS[0].previousSibling.innerHTML, shiftTrigger, capsTrigger);
+    }
   } else if (event.code === 'Minus') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
@@ -375,10 +467,11 @@ document.addEventListener('keydown', (event) => {
   } else if (event.code === 'BracketLeft') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '{') {
+      if (title.innerHTML === '{' || title.previousSibling.innerHTML === 'Х') {
         title.parentNode.classList.add('row__button_active');
-        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
-        else typeToCursorPlace(title.previousSibling.innerHTML);
+        if (shiftTrigger && enLanguage) typeToCursorPlace(title.innerHTML);
+        else if (!shiftTrigger && enLanguage) typeToCursorPlace(title.previousSibling.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'BracketRight') {
@@ -452,6 +545,9 @@ document.addEventListener('keydown', (event) => {
         else typeToCursorPlace(title.previousSibling.innerHTML);
       }
     });
+  } else if (event.code === 'MetaLeft') {
+    event.preventDefault();
+    WINKEY.parentNode.classList.add('row__button_active');
   }
 });
 
@@ -461,10 +557,17 @@ document.addEventListener('keyup', (event) => {
     removeFromArray(PRESSED_BUTTONS, event.code);
     unshift('ShiftRight');
     unshift('ShiftLeft');
+    if (event.altKey) changeLanguage(enLanguage);
   } else if (event.code.includes('Key')) {
-    LETTERS.forEach((letterBtn) => {
-      if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.remove('row__button_active');
-    });
+    if (enLanguage) {
+      LETTERS.forEach((letterBtn) => {
+        if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.remove('row__button_active');
+      });
+    } else {
+      LETTERS.forEach((letterBtn) => {
+        if (letterBtn.innerHTML === LETTER_BINDINGS[event.code[3]]) letterBtn.parentNode.classList.remove('row__button_active');
+      });
+    }
   } else if (event.key === 'CapsLock') {
     CAPS_LOCK_BUTTON.classList.remove('row__button_active');
     capslockLock = false;
@@ -494,7 +597,7 @@ document.addEventListener('keyup', (event) => {
     });
   } else if (event.code === 'BracketLeft') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '{') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '{' || title.previousSibling.innerHTML === 'Х') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'BracketRight') {
     SHIFTED_SECONDS.forEach((title) => {
@@ -529,9 +632,14 @@ document.addEventListener('keyup', (event) => {
       if (title.innerHTML === '?') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'AltLeft') {
+    if (event.shiftKey) changeLanguage(enLanguage);
     ALTS[0].parentNode.classList.remove('row__button_active');
   } else if (event.code === 'AltRight') {
+    if (event.shiftKey) changeLanguage(enLanguage);
     ALTS[1].parentNode.classList.remove('row__button_active');
+  } else if (event.code === 'MetaLeft') {
+    event.preventDefault();
+    WINKEY.parentNode.classList.remove('row__button_active');
   }
 });
 
@@ -551,7 +659,7 @@ LETTERS.forEach((letter) => letter.parentNode.addEventListener('mousedown', () =
 }));
 
 SHIFTED_SECONDS.forEach((title) => title.parentNode.addEventListener('mousedown', () => {
-  if (shiftTrigger) {
+  if (shiftTrigger && enLanguage) {
     switch (title.innerHTML) {
       case '&amp;':
         typeToCursorPlace('&');
@@ -565,7 +673,11 @@ SHIFTED_SECONDS.forEach((title) => title.parentNode.addEventListener('mousedown'
       default:
         typeToCursorPlace(title.innerHTML);
     }
-  } else typeToCursorPlace(title.previousSibling.innerHTML);
+  } else if (!shiftTrigger && enLanguage) {
+    typeToCursorPlace(title.previousSibling.innerHTML);
+  } else if (shiftTrigger && !enLanguage) {
+    typeToCursorPlace(title.innerHTML, shiftTrigger, capsTrigger);
+  } else typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
 }));
 
 BACKSPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('backspace'));
