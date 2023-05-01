@@ -69,6 +69,7 @@
 }
 
 .row__button {
+  outline: none;
   cursor: pointer;
   display: -webkit-box;
   display: -ms-flexbox;

@@ -477,16 +477,21 @@ document.addEventListener('keydown', (event) => {
   } else if (event.code === 'BracketRight') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '}') {
+      if (title.innerHTML === '}' || title.previousSibling.innerHTML === 'Ъ') {
         title.parentNode.classList.add('row__button_active');
-        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
-        else typeToCursorPlace(title.previousSibling.innerHTML);
+        if (shiftTrigger && enLanguage) typeToCursorPlace(title.innerHTML);
+        else if (!shiftTrigger && enLanguage) typeToCursorPlace(title.previousSibling.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'Backslash') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '|') {
+      if (title.innerHTML === '|' && enLanguage) {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (!enLanguage && title.innerHTML === '/') {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace(title.innerHTML);
         else typeToCursorPlace(title.previousSibling.innerHTML);
@@ -503,43 +508,59 @@ document.addEventListener('keydown', (event) => {
   } else if (event.code === 'Semicolon') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === ':') {
+      if (title.innerHTML === ':' && enLanguage) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace(title.innerHTML);
         else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (title.previousSibling.innerHTML === 'Ж') {
+        title.parentNode.classList.add('row__button_active');
+        typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'Quote') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '"') {
+      if (title.innerHTML === '"' && enLanguage) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace(title.innerHTML);
         else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (title.previousSibling.innerHTML === 'Э') {
+        title.parentNode.classList.add('row__button_active');
+        typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'Comma') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '&lt;') {
+      if (title.innerHTML === '&lt;' && enLanguage) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace('<');
         else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (title.previousSibling.innerHTML === 'Б') {
+        title.parentNode.classList.add('row__button_active');
+        typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'Period') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '&gt;') {
+      if (title.innerHTML === '&gt;' && enLanguage) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace('>');
         else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (title.previousSibling.innerHTML === 'Ю') {
+        title.parentNode.classList.add('row__button_active');
+        typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
       }
     });
   } else if (event.code === 'Slash') {
     event.preventDefault();
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '?') {
+      if (title.innerHTML === '?' && enLanguage) {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      } else if (title.innerHTML === ',' && !enLanguage) {
         title.parentNode.classList.add('row__button_active');
         if (shiftTrigger) typeToCursorPlace(title.innerHTML);
         else typeToCursorPlace(title.previousSibling.innerHTML);
@@ -601,11 +622,11 @@ document.addEventListener('keyup', (event) => {
     });
   } else if (event.code === 'BracketRight') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '}') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '}' || title.previousSibling.innerHTML === 'Ъ') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Backslash') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '|') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '|' || title.innerHTML === '/') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Tab') {
     TAB_BUTTON.classList.remove('row__button_active');
@@ -613,23 +634,23 @@ document.addEventListener('keyup', (event) => {
     ENTER_BUTTON.classList.remove('row__button_active');
   } else if (event.code === 'Semicolon') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === ':') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === ':' || title.previousSibling.innerHTML === 'Ж') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Quote') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '"') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '"' || title.previousSibling.innerHTML === 'Э') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Comma') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '&lt;') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '&lt;' || title.previousSibling.innerHTML === 'Б') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Period') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '&gt;') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '&gt;' || title.previousSibling.innerHTML === 'Ю') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'Slash') {
     SHIFTED_SECONDS.forEach((title) => {
-      if (title.innerHTML === '?') title.parentNode.classList.remove('row__button_active');
+      if (title.innerHTML === '?' || title.innerHTML === ',') title.parentNode.classList.remove('row__button_active');
     });
   } else if (event.code === 'AltLeft') {
     if (event.shiftKey) changeLanguage(enLanguage);
@@ -675,7 +696,7 @@ SHIFTED_SECONDS.forEach((title) => title.parentNode.addEventListener('mousedown'
     }
   } else if (!shiftTrigger && enLanguage) {
     typeToCursorPlace(title.previousSibling.innerHTML);
-  } else if (shiftTrigger && !enLanguage) {
+  } else if (shiftTrigger && !enLanguage && !title.previousSibling.innerHTML.match(/[а-я]/i) && title.previousSibling.innerHTML !== 'Ё') {
     typeToCursorPlace(title.innerHTML, shiftTrigger, capsTrigger);
   } else typeToCursorPlace(title.previousSibling.innerHTML, shiftTrigger, capsTrigger);
 }));
@@ -697,3 +718,18 @@ SPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace(' '));
 TAB_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('    '));
 
 ENTER_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('\n'));
+
+// Local Storage
+function setLocalStorage(nameOfClass) {
+  const element = document.querySelector(`.${nameOfClass}`);
+  localStorage.setItem(nameOfClass, element.value);
+}
+window.addEventListener('beforeunload', () => setLocalStorage('name'));
+
+function getLocalStorage(nameOfClass) {
+  const element = document.querySelector(`.${nameOfClass}`);
+  if (localStorage.getItem(nameOfClass)) {
+    element.value = localStorage.getItem(nameOfClass);
+  }
+}
+window.addEventListener('load', () => getLocalStorage('name'));
