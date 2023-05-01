@@ -199,6 +199,8 @@ createKeyboard();
 
 // Getting all buttons by groups in order to manipulate them comfortably
 const ALL_BUTTONS = document.querySelectorAll('.row__button');
+const ALL_LABELS = document.querySelectorAll('.row__title');
+const DELETE = Array.from(ALL_LABELS).find((label) => label.innerHTML === 'Del');
 const SHIFT_BUTTONS = document.querySelectorAll('.row__button_width_thick');
 const LETTERS = document.querySelectorAll('.row__title_type_letter');
 const SHIFTED_SECONDS = document.querySelectorAll('.row__title_shifted'); // labels of special characters like #, $, %, etc.
@@ -208,10 +210,12 @@ const BACKSPACE_BUTTON = document.querySelector('.row__button_width_wide');
 const CAPS_LOCK_BUTTON = document.querySelector('.row__button_width_medium');
 const SPACE_BUTTON = document.querySelector('.row__button_width_largest');
 const CTRL_BUTTONS = document.querySelectorAll('.row__button_width_slim');
+const TAB_BUTTON = document.querySelector('.row__button_width_thin');
 
 let cursor = 0;
 let shiftTrigger = false;
 let capsTrigger = false;
+let capslockLock = false; // lock CapsLock button when it is pressed
 
 function removeFromArray(array, trash) {
   const id = array.indexOf(trash);
@@ -248,31 +252,35 @@ function unshift(side) {
 }
 
 function switchCapsLock() {
-  capsTrigger = !capsTrigger;
-  if (capsTrigger) CAPS_LOCK_BUTTON.classList.add('row__button_active');
-  else CAPS_LOCK_BUTTON.classList.remove('row__button_active');
+  if (!capslockLock) {
+    capsTrigger = !capsTrigger;
+  }
+  capslockLock = true;
 }
 
 function typeToCursorPlace(letter, shif = false, cap = false) {
-  let resultLetter;
-  let leftText;
   if (letter === 'backspace') {
     if (cursor > 0) {
-      leftText = SCREEN.value.slice(0, cursor - 1);
-      resultLetter = '';
+      const leftText = SCREEN.value.slice(0, cursor - 1);
+      const resultLetter = '';
       const rightText = SCREEN.value.slice(cursor);
       SCREEN.value = leftText + resultLetter + rightText;
       cursor -= 1;
     }
+  } else if (letter === 'delete') {
+    const leftText = SCREEN.value.slice(0, cursor);
+    const resultLetter = '';
+    const rightText = SCREEN.value.slice(cursor + 1);
+    SCREEN.value = leftText + resultLetter + rightText;
   } else {
     let isBig = false;
     if (shif) isBig = !isBig;
     if (cap) isBig = !isBig;
-    resultLetter = (isBig) ? letter.toUpperCase() : letter.toLowerCase();
-    leftText = SCREEN.value.slice(0, cursor);
+    const resultLetter = (isBig) ? letter.toUpperCase() : letter.toLowerCase();
+    const leftText = SCREEN.value.slice(0, cursor);
     const rightText = SCREEN.value.slice(cursor);
     SCREEN.value = leftText + resultLetter + rightText;
-    cursor += 1;
+    cursor += resultLetter.length;
   }
   SCREEN.selectionStart = cursor;
   SCREEN.selectionEnd = cursor;
@@ -296,11 +304,18 @@ document.addEventListener('keydown', (event) => {
     });
     typeToCursorPlace(event.code[3], shiftTrigger, capsTrigger);
   } else if (event.key === 'CapsLock') {
+    CAPS_LOCK_BUTTON.classList.add('row__button_active');
     switchCapsLock();
+    if (capsTrigger) CAPS_LOCK_BUTTON.setAttribute('style', 'border-color: #005016;');
+    else CAPS_LOCK_BUTTON.removeAttribute('style');
   } else if (event.key === 'Backspace') {
     event.preventDefault();
     typeToCursorPlace('backspace');
     BACKSPACE_BUTTON.classList.add('row__button_active');
+  } else if (event.key === 'Delete') {
+    event.preventDefault();
+    typeToCursorPlace('delete');
+    DELETE.parentNode.classList.add('row__button_active');
   } else if (event.code === 'Space') {
     event.preventDefault();
     typeToCursorPlace(' ');
@@ -352,6 +367,28 @@ document.addEventListener('keydown', (event) => {
         else typeToCursorPlace(title.previousSibling.innerHTML);
       }
     });
+  } else if (event.code === 'BracketRight') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '}') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
+  } else if (event.code === 'Backslash') {
+    event.preventDefault();
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '|') {
+        title.parentNode.classList.add('row__button_active');
+        if (shiftTrigger) typeToCursorPlace(title.innerHTML);
+        else typeToCursorPlace(title.previousSibling.innerHTML);
+      }
+    });
+  } else if (event.code === 'Tab') {
+    event.preventDefault();
+    typeToCursorPlace('    ');
+    TAB_BUTTON.classList.add('row__button_active');
   }
 });
 
@@ -368,8 +405,13 @@ document.addEventListener('keyup', (event) => {
     LETTERS.forEach((letterBtn) => {
       if (letterBtn.innerHTML === event.code[3]) letterBtn.parentNode.classList.remove('row__button_active');
     });
+  } else if (event.key === 'CapsLock') {
+    CAPS_LOCK_BUTTON.classList.remove('row__button_active');
+    capslockLock = false;
   } else if (event.key === 'Backspace') {
     BACKSPACE_BUTTON.classList.remove('row__button_active');
+  } else if (event.key === 'Delete') {
+    DELETE.parentNode.classList.remove('row__button_active');
   } else if (event.code === 'Space') {
     SPACE_BUTTON.classList.remove('row__button_active');
   } else if (event.code === 'ControlLeft') {
@@ -394,6 +436,16 @@ document.addEventListener('keyup', (event) => {
     SHIFTED_SECONDS.forEach((title) => {
       if (title.innerHTML === '{') title.parentNode.classList.remove('row__button_active');
     });
+  } else if (event.code === 'BracketRight') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '}') title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'Backslash') {
+    SHIFTED_SECONDS.forEach((title) => {
+      if (title.innerHTML === '|') title.parentNode.classList.remove('row__button_active');
+    });
+  } else if (event.code === 'Tab') {
+    TAB_BUTTON.classList.remove('row__button_active');
   }
 });
 
@@ -427,6 +479,14 @@ SHIFTED_SECONDS.forEach((title) => title.parentNode.addEventListener('mousedown'
 
 BACKSPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace('backspace'));
 
-CAPS_LOCK_BUTTON.addEventListener('mousedown', switchCapsLock);
+DELETE.parentNode.addEventListener('mousedown', () => typeToCursorPlace('delete'));
+
+CAPS_LOCK_BUTTON.addEventListener('mousedown', () => {
+  capslockLock = false;
+  if (!capsTrigger) CAPS_LOCK_BUTTON.setAttribute('style', 'border-color: #005016;');
+  else CAPS_LOCK_BUTTON.removeAttribute('style');
+  switchCapsLock();
+  capslockLock = false;
+});
 
 SPACE_BUTTON.addEventListener('mousedown', () => typeToCursorPlace(' '));
