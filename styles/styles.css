@@ -167,7 +167,9 @@
           box-shadow: 0px 0px 10px 5px rgba(212, 236, 74, 0.6), inset 0 0 61px -11px rgba(147, 160, 74, 0.6);
 }
 
+.row__button_type_arrow_active,
 .row__button_type_arrow:active {
   background-color: #fffc67;
+  color: black;
 }
 /*# sourceMappingURL=styles.css.map */
